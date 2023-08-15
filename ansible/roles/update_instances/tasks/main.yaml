@@ -1,0 +1,9 @@
+- name: update instances
+  apt:
+    update_cache: yes
+
+- name: upgrade instances
+  apt:
+    upgrade: yes
+    autoremove: yes
+    autoclean: yes

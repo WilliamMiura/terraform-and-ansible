@@ -1,0 +1,6 @@
+k8s_pks:
+- apt-transport-https
+- curl
+- kubelet
+- kubeadm
+- kubectl

@@ -1,0 +1,30 @@
+- name: Add ip's for known_hosts
+  hosts: gcp_k8s_all
+  tasks:
+    - name: Coletar chave de host SSH
+      command: ssh-keyscan -H {{ ansible_ssh_host }}
+      register: keyscan_result
+
+    - name: Adicionar chave de host ao known_hosts
+      known_hosts:
+        name: "{{ ansible_ssh_host }}"
+        key: "{{ keyscan_result.stdout_lines[0] }}"
+        path: "~/.ssh/known_hosts"
+        
+- name: Install k8s and Docker pkgs
+  become: yes
+  hosts: gcp_k8s_all
+  roles:
+    - update_instances
+    - docker
+    - k8s-all
+- name: Setup master node
+  become: yes
+  hosts: gcp_master_k8s_master
+  roles:
+    - k8s-master
+- name: Setup Worker node
+  become: yes
+  hosts: gcp_worker_k8s_worker
+  roles:
+    - k8s-worker

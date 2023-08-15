@@ -1,0 +1,43 @@
+---
+- name: add k8s pks
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: add k8s repository
+  apt_repository:
+    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    update_cache: yes
+
+- name: install pks k8s
+  apt:
+    name: "{{ item }}"
+  loop: "{{ k8s_pks }}"
+
+- name: disable swap
+  command: swapoff -a
+
+- name: Ensure they can see bridge traffic
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+  with_items:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
+- name: reset containers and rm dir for kubeinit
+  block:
+    - name: Verificar se o diretório existe
+      stat:
+        path: /etc/containerd/config.toml
+      register: dir_status
+    - name: rm dir if exists
+      file:
+        path: /etc/containerd/config.toml
+        state: absent
+      when: dir_status.stat.exists | default(false)
+
+- name: reset containers
+  command: sudo systemctl restart containerd

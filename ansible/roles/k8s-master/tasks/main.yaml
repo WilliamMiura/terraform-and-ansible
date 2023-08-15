@@ -1,0 +1,53 @@
+- name: Destroy cluster before starting again
+  command: kubeadm reset -f 
+
+- name: initialize k8s cluster
+  command: kubeadm init
+  register: kubeadm_init_output
+
+- name: create file with output
+  copy:
+    content: "{{ kubeadm_init_output.stdout }}"
+    dest: /root/kubeadminit
+
+- name: prepare kubejoin script
+  shell: tail -2 /root/kubeadminit > /root/kubejoin.sh
+
+- name: get kubejoin
+  fetch: 
+    dest: ./join
+    src: /root/kubejoin.sh
+
+- name: Organize files
+  shell: |
+        cp join/{{ inventory_hostname }}/root/kubejoin.sh join/
+        rm -fr join/{{ inventory_hostname }}
+  delegate_to: localhost
+  become: no
+
+- name: export var
+  become: yes
+  block:
+    - name: create dir .kube
+      file:
+        path: "$HOME/.kube"
+        state: directory
+    - name: cp admin.conf
+      copy: 
+        src: /etc/kubernetes/admin.conf
+        dest: "$HOME/.kube/config"
+        remote_src: yes
+    - name: set ownership for ./kube/config
+      file:
+        path: "$HOME/.kube/config"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        state: file
+
+- name: install pod network
+  become: yes
+  shell: |
+      kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+      kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/custom-resources.yaml
+  environment: 
+    KUBECONFIG: /etc/kubernetes/admin.conf
