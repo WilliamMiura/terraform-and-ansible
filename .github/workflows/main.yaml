@@ -31,7 +31,7 @@ jobs:
     - name: cp id_rsa
       run: |
         cp -r /root/.ssh/ ~/
-        
+
     - name: terraform init
       run: terraform init
       
@@ -49,4 +49,5 @@ jobs:
       
     - name: ansible playbook-run
       run: |
+        sleep 5
         ansible-playbook -u $HOSTUSER -i ansible/inventory/gcp.yaml ansible/site.yaml
