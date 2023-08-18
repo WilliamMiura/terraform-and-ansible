@@ -49,5 +49,4 @@ jobs:
       
     - name: ansible playbook-run
       run: |
-        sleep 5
         ansible-playbook -u $HOSTUSER -i ansible/inventory/gcp.yaml ansible/site.yaml
