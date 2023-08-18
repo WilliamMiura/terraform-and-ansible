@@ -9,7 +9,13 @@
   lineinfile:
     path: /opt/kubejoin.sh
     line: "#!/bin/bash"
-    insertbefore: BOF  # Insere a linha no início do arquivo
+    insertbefore: BOF
+    
+- name: Check if port 10250 is in use
+  shell: "netstat -tuln | grep ':10250 '"
+  register: port_check
+  ignore_errors: true
 
-- name: Run kubejoin script
+- name: Run kubejoin script if port is not in use
   command: /opt/kubejoin.sh
+  when: port_check.rc != 0 
