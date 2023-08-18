@@ -4,12 +4,6 @@
     dest: /opt/kubejoin.sh
     src: ./join/kubejoin.sh
     mode: '0700'
-
-- name: Check if port 10250 is in use
-  shell: netstat -tuln | grep ":10250 "
-  register: port_check_result
-  ignore_errors: true
-
+    
 - name: Run kubejoin script
   command: /opt/kubejoin.sh
-  when: port_check_result.rc != 0  # Executa apenas se a porta não estiver em uso
