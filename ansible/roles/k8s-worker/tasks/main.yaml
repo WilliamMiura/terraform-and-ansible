@@ -4,6 +4,12 @@
     dest: /opt/kubejoin.sh
     src: ./join/kubejoin.sh
     mode: '0700'
-    
+
+- name: Add shebang to kubejoin script
+  lineinfile:
+    path: /opt/kubejoin.sh
+    line: "#!/bin/bash"
+    insertbefore: BOF  # Insere a linha no início do arquivo
+
 - name: Run kubejoin script
   command: /opt/kubejoin.sh
