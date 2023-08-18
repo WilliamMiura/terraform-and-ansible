@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: docker://williammiura0/terraformandansible:latest
+
+    env: 
+      GOOGLE_APPLICATION_CREDENTIALS: ${{secrets.KEY_GCP}}
+      ANSIBLE_HOST_KEY_CHECKING: False
+      HOSTUSER: ${{secrets.HOSTUSER}}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+        
+    - name: login awscli
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+        aws-region: ${{secrets.AWS_ACCESS_REGION}}
+
+    - name: auth google iamkey
+      env:
+        GCP: ${{secrets.KEY_GCP}}
+      run: echo "$GCP" > iamkey.json
+
+    - name: cp id_rsa
+      run: |
+        cp -r /root/.ssh/ ~/
+        
+    - name: terraform init
+      run: terraform init
+      
+    - name: terraform plan e apply
+      run: |
+        terraform plan -var="project=${{secrets.TF_VAR_PROJECT}}" -var="region=${{secrets.TF_VAR_REGION}}" -var="zone=${{secrets.TF_VAR_ZONE}}"
+        terraform apply -auto-approve -var="project=${{secrets.TF_VAR_PROJECT}}" -var="region=${{secrets.TF_VAR_REGION}}" -var="zone=${{secrets.TF_VAR_ZONE}}"
+    
+    - name: rm known_hosts if exists
+      run: |
+        chmod +x script.sh
+        ./script.sh
+    - name: ansible list
+      run: ansible-inventory --list -i ansible/inventory/gcp.yaml
+      
+    - name: ansible playbook-run
+      run: |
+        ansible-playbook -u $HOSTUSER -i ansible/inventory/gcp.yaml ansible/site.yaml
