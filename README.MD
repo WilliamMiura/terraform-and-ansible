@@ -9,3 +9,6 @@
 **this code for ansible**
   > ansible-playbook -u userinstancename -i ansible/inventory/gcp.yaml ansible/site.yaml @execute site.yaml
   > ansible-inventory --list -i ansible/inventory/cgp.yaml @list instances groups
+
+**Before running instance master**
+  > Connect with ssh and run: export KUBECONFIG=/etc/kubernetes/admin.conf
